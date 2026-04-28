@@ -1972,6 +1972,17 @@ ul, ol { list-style: none; }
   border-top: 1px solid var(--line);
   padding-top: 32px;
 }
+.doc-article__body .doc-section {
+  display: block;
+  padding: 0;
+  border-bottom: none;
+  max-width: none;
+}
+.doc-article__body .doc-section__body,
+.doc-article__body .doc-section__bullets {
+  grid-column: auto;
+  max-width: none;
+}
 .doc-section__head {
   display: flex;
   gap: 12px;
@@ -1981,6 +1992,7 @@ ul, ol { list-style: none; }
   font-size: 22px;
   color: var(--ink);
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 .doc-section__num {
   font-family: var(--font-mono);
