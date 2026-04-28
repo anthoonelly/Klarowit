@@ -1413,11 +1413,11 @@ ul, ol { list-style: none; }
   align-items: center;
   gap: 18px;
 }
-.landing__nav a {
+.landing__nav a:not(.btn) {
   font-size: 13px;
   color: var(--ink-2);
 }
-.landing__nav a:hover { color: var(--ink); }
+.landing__nav a:not(.btn):hover { color: var(--ink); }
 .landing__hero {
   max-width: 780px;
   margin: 0 auto;
