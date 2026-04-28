@@ -1,0 +1,98 @@
+// Memoist database schema
+// Run after editing: npx prisma db push (dev) or npx prisma migrate deploy (prod)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(USER)
+  /// Saldo tokenów (1 token ≈ 1 wygenerowanie prostego dokumentu).
+  tokenBalance Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  projects     Project[]
+  transactions Transaction[]
+  sessions     Session[]
+
+  @@index([email])
+}
+
+model Project {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  /// Pełna treść transkrypcji (źródło dla generacji).
+  transcript String   @db.Text
+  /// Opcjonalna nazwa pliku z którego pochodzi transkrypcja.
+  fileName   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  documents  Document[]
+
+  @@index([userId, createdAt])
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// ID typu dokumentu, np. "opis", "br", "harmo" — odpowiada DocTypeId.
+  docType    String
+  title      String
+  /// Pełna struktura dokumentu (GeneratedDocContent).
+  content    Json
+  version    Int      @default(1)
+  /// Ile tokenów kosztowała ta generacja.
+  tokensUsed Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Dodatnia = kredyt, ujemna = obciążenie.
+  amount    Int
+  /// Powód: signup_gift | admin_grant | purchase | generation:<docType> | refund
+  reason    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// JWT identifier (jti). Pozwala na unieważnienie sesji po stronie serwera.
+  jti       String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
